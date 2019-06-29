@@ -1135,3 +1135,74 @@ TEST(TestIRac, swinghToString) {
   EXPECT_EQ("auto", IRac::swinghToString(stdAc::swingh_t::kAuto));
   EXPECT_EQ("unknown", IRac::swinghToString((stdAc::swingh_t)500));
 }
+
+TEST(TestIRac, FujitsuIssue781) {
+  IRFujitsuAC ac(0);
+  IRac irac(0);
+  IRrecv capture(0);
+
+  // Ref: https://github.com/markszabo/IRremoteESP8266/issues/781#issuecomment-506939588
+  // i.e. "code sent remote: 33,1463001010FE09306000300000002020"
+  uint8_t swing_on_state[kFujitsuAcStateLength] = {
+      0x14, 0x63, 0x00, 0x10, 0x10, 0xFE, 0x09, 0x30,
+      0x60, 0x00, 0x30, 0x00, 0x00, 0x00, 0x20, 0x20};
+  std::string swing_on =
+      "Model: 1 (ARRAH2E), Power: On, Mode: 0 (AUTO), Temp: 22C, "
+      "Fan: 0 (AUTO), Swing: Vert + Horiz, Command: N/A";
+
+  ac.begin();
+  irac.fujitsu(&ac,
+               ARRAH2E,                     // Model
+               true,                        // Power
+               stdAc::opmode_t::kAuto,      // Mode
+               22,                          // Celsius
+               stdAc::fanspeed_t::kAuto,    // Fan speed
+               stdAc::swingv_t::kAuto,      // Veritcal swing
+               stdAc::swingh_t::kAuto,      // Horizontal swing
+               false,                       // Quiet
+               false,                       // Turbo (Powerful)
+               false);                      // Econo
+  ASSERT_EQ(swing_on, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(FUJITSU_AC, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kFujitsuAcBits, ac._irsend.capture.bits);
+  EXPECT_STATE_EQ(swing_on_state, ac._irsend.capture.state,
+                  ac._irsend.capture.bits);
+  ac.setRaw(ac._irsend.capture.state, ac._irsend.capture.bits / 8);
+  ASSERT_EQ(swing_on, ac.toString());
+
+  ac._irsend.reset();
+  // Ref: https://github.com/markszabo/IRremoteESP8266/issues/781#issuecomment-506939885
+  // i.e. "code sent remote: 33,1463001010FE09305000300000002030"
+  // This user provided data appears wrong. i.e. Swings are set to on.
+  uint8_t swing_off_state[kFujitsuAcStateLength] = {  // User data
+      0x14, 0x63, 0x00, 0x10, 0x10, 0xFE, 0x09, 0x30,
+      0x50, 0x00, 0x30, 0x00, 0x00, 0x00, 0x20, 0x30};
+  std::string swing_off =  // What we should expect.
+      "Model: 1 (ARRAH2E), Power: On, Mode: 0 (AUTO), Temp: 21C, "
+      "Fan: 0 (AUTO), Swing: Off, Command: N/A";
+  irac.fujitsu(&ac,
+               ARRAH2E,                     // Model
+               true,                        // Power
+               stdAc::opmode_t::kAuto,      // Mode
+               21,                          // Celsius
+               stdAc::fanspeed_t::kAuto,    // Fan speed  (Doesn't appear set)
+               stdAc::swingv_t::kOff,       // Veritcal swing
+               stdAc::swingh_t::kOff,       // Horizontal swing
+               false,                       // Quiet
+               false,                       // Turbo (Powerful)
+               false);                      // Econo
+  ASSERT_EQ(swing_off, ac.toString());
+  ac._irsend.makeDecodeResult();
+  EXPECT_TRUE(capture.decode(&ac._irsend.capture));
+  ASSERT_EQ(FUJITSU_AC, ac._irsend.capture.decode_type);
+  ASSERT_EQ(kFujitsuAcBits, ac._irsend.capture.bits);
+  ac.setRaw(ac._irsend.capture.state, ac._irsend.capture.bits / 8);
+  ASSERT_EQ(swing_off, ac.toString());
+  // What the user provided state produces.
+  ac.setRaw(swing_off_state, kFujitsuAcStateLength);
+  ASSERT_EQ(
+      "Model: 1 (ARRAH2E), Power: On, Mode: 0 (AUTO), Temp: 21C, "
+      "Fan: 0 (AUTO), Swing: Vert + Horiz, Command: N/A", ac.toString());
+}

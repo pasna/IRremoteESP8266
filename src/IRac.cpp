@@ -54,6 +54,9 @@ bool IRac::isProtocolSupported(const decode_type_t protocol) {
 #if SEND_DAIKIN160
     case decode_type_t::DAIKIN160:
 #endif
+#if SEND_DAIKIN176
+    case decode_type_t::DAIKIN176:
+#endif
 #if SEND_DAIKIN2
     case decode_type_t::DAIKIN2:
 #endif
@@ -237,6 +240,20 @@ void IRac::daikin160(IRDaikin160 *ac,
   ac->send();
 }
 #endif  // SEND_DAIKIN160
+
+#if SEND_DAIKIN176
+void IRac::daikin176(IRDaikin176 *ac,
+                     const bool on, const stdAc::opmode_t mode,
+                     const float degrees, const stdAc::fanspeed_t fan,
+                     const stdAc::swingh_t swingh) {
+  ac->setPower(on);
+  ac->setMode(ac->convertMode(mode));
+  ac->setTemp(degrees);
+  ac->setFan(ac->convertFan(fan));
+  ac->setSwingHorizontal(ac->convertSwingH(swingh));
+  ac->send();
+}
+#endif  // SEND_DAIKIN176
 
 #if SEND_DAIKIN2
 void IRac::daikin2(IRDaikin2 *ac,
@@ -983,6 +1000,14 @@ bool IRac::sendAc(const decode_type_t vendor, const int16_t model,
       break;
     }
 #endif  // SEND_DAIKIN160
+#if SEND_DAIKIN176
+    case DAIKIN176:
+    {
+      IRDaikin176 ac(_pin);
+      daikin176(&ac, on, mode, degC, fan, swingh);
+      break;
+    }
+#endif  // SEND_DAIKIN176
 #if SEND_DAIKIN2
     case DAIKIN2:
     {
@@ -1492,6 +1517,13 @@ namespace IRAcUtils {
         return ac.toString();
       }
 #endif  // DECODE_DAIKIN160
+#if DECODE_DAIKIN176
+      case decode_type_t::DAIKIN176: {
+        IRDaikin176 ac(0);
+        ac.setRaw(result->state);
+        return ac.toString();
+      }
+#endif  // DECODE_DAIKIN160
 #if DECODE_DAIKIN2
       case decode_type_t::DAIKIN2: {
         IRDaikin2 ac(0);
@@ -1711,6 +1743,14 @@ namespace IRAcUtils {
 #if DECODE_DAIKIN160
       case decode_type_t::DAIKIN160: {
         IRDaikin160 ac(kGpioUnused);
+        ac.setRaw(decode->state);
+        *result = ac.toCommon();
+        break;
+      }
+#endif  // DECODE_DAIKIN160
+#if DECODE_DAIKIN176
+      case decode_type_t::DAIKIN176: {
+        IRDaikin176 ac(kGpioUnused);
         ac.setRaw(decode->state);
         *result = ac.toCommon();
         break;

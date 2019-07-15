@@ -9,8 +9,8 @@
 //   Brand: Daikin,  Model: FTXZ35NV1B A/C
 //   Brand: Daikin,  Model: FTXZ50NV1B A/C
 //   Brand: Daikin,  Model: ARC433B69 remote
-//   Brand: Daikin,  Model: ARC423A5 remote, model FTE12HV2S
-
+//   Brand: Daikin,  Model: ARC423A5 remote
+//   Brand: Daikin,  Model: FTE12HV2S A/C
 
 #ifndef IR_DAIKIN_H_
 #define IR_DAIKIN_H_
@@ -237,12 +237,12 @@ const uint8_t kDaikin160ByteFan = 17;
 const uint8_t kDaikin160MaskFan = 0b00001111;
 const uint8_t kDaikin160ByteSwingV = 13;
 const uint8_t kDaikin160MaskSwingV = 0b11110000;
-const uint8_t kDaikin160SwingVLowest = 0x1;
-const uint8_t kDaikin160SwingVLow = 0x2;
-const uint8_t kDaikin160SwingVMiddle = 0x3;
-const uint8_t kDaikin160SwingVHigh = 0x4;
+const uint8_t kDaikin160SwingVLowest =  0x1;
+const uint8_t kDaikin160SwingVLow =     0x2;
+const uint8_t kDaikin160SwingVMiddle =  0x3;
+const uint8_t kDaikin160SwingVHigh =    0x4;
 const uint8_t kDaikin160SwingVHighest = 0x5;
-const uint8_t kDaikin160SwingVAuto = 0xF;
+const uint8_t kDaikin160SwingVAuto =    0xF;
 
 // Another variant of the protocol for the Daikin BRC4C153 remote.
 const uint16_t kDaikin176Freq = 38000;  // Modulation Frequency in Hz.
@@ -266,8 +266,9 @@ const uint8_t kDaikin176ByteFan = 18;
 const uint8_t kDaikin176MaskFan = 0b11110000;
 const uint8_t kDaikin176ByteSwingH = 18;
 const uint8_t kDaikin176MaskSwingH = 0b00001111;
-const uint8_t kDaikin176SwingHAuto = 0x5;
+const uint8_t kDaikin176SwingHAuto =  0x5;
 const uint8_t kDaikin176SwingHSwing = 0x6;
+
 // Legacy defines.
 #define DAIKIN_COOL kDaikinCool
 #define DAIKIN_HEAT kDaikinHeat
@@ -529,7 +530,7 @@ class IRDaikin160 {
   static uint8_t convertSwingV(const stdAc::swingv_t position);
   static stdAc::swingv_t toCommonSwingV(const uint8_t setting);
   stdAc::state_t toCommon(void);
-  String toString(void); 
+  String toString(void);
 #ifndef UNIT_TEST
 
  private:
@@ -542,13 +543,12 @@ class IRDaikin160 {
   void stateReset();
   void checksum();
 };
-
 // Class to emulate a Daikin BRC4C153 remote.
 class IRDaikin176 {
  public:
   explicit IRDaikin176(uint16_t pin);
 
-#if SEND_DAIKIN176
+ #if SEND_DAIKIN176
   void send(const uint16_t repeat = kDaikin176DefaultRepeat);
   uint8_t calibrate(void) { return _irsend.calibrate(); }
 #endif
@@ -576,9 +576,9 @@ class IRDaikin176 {
   stdAc::state_t toCommon(void);
   String toString(void);
 
-#ifndef UNIT_TEST
+ #ifndef UNIT_TEST
 
- private:
+  private:
   IRsend _irsend;
 #else
   IRsendTest _irsend;
@@ -588,4 +588,5 @@ class IRDaikin176 {
   void stateReset();
   void checksum();
 };// end of IRDaikin176
+
 #endif  // IR_DAIKIN_H_

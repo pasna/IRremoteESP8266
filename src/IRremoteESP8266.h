@@ -26,7 +26,7 @@
  * DISH decode by marcosamarinho
  * Gree Heatpump sending added by Ville Skyttä (scop)
  *     (derived from https://github.com/ToniA/arduino-heatpumpir/blob/master/GreeHeatpumpIR.cpp)
- * Updated by markszabo (https://github.com/crankyoldgit/IRremoteESP8266) for sending IR code on ESP8266
+ * Updated by markszabo (https://github.com/markszabo/IRremoteESP8266) for sending IR code on ESP8266
  * Updated by Sebastien Warin (http://sebastien.warin.fr) for receiving IR code on ESP8266
  *
  * Updated by sillyfrog for Daikin, adopted from
@@ -51,7 +51,7 @@
 #endif  // UNIT_TEST
 
 // Library Version
-#define _IRREMOTEESP8266_VERSION_ "2.6.3"
+#define _IRREMOTEESP8266_VERSION_ "2.6.2"
 // Supported IR protocols
 // Each protocol you include costs memory and, during decode, costs time
 // Disable (set to false) all the protocols you do not need/want!
@@ -238,8 +238,8 @@
 #define DECODE_DAIKIN160       true
 #define SEND_DAIKIN160         true
 
-#define DECODE_NEOCLIMA        true
-#define SEND_NEOCLIMA          true
+#define DECODE_DAIKIN176       true
+#define SEND_DAIKIN176         true
 
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
@@ -248,7 +248,7 @@
      DECODE_WHIRLPOOL_AC || DECODE_SAMSUNG_AC || DECODE_ELECTRA_AC || \
      DECODE_PANASONIC_AC || DECODE_MWM || DECODE_DAIKIN2 || \
      DECODE_VESTEL_AC || DECODE_TCL112AC || DECODE_MITSUBISHIHEAVY || \
-     DECODE_DAIKIN216 || DECODE_SHARP_AC || DECODE_DAIKIN160 || DECODE_NEOCLIMA)
+     DECODE_DAIKIN216 || DECODE_SHARP_AC || DECODE_DAIKIN160 || DECODE_DAIKIN176)
 #define DECODE_AC true  // We need some common infrastructure for decoding A/Cs.
 #else
 #define DECODE_AC false   // We don't need that infrastructure.
@@ -257,7 +257,7 @@
 // Use millisecond 'delay()' calls where we can to avoid tripping the WDT.
 // Note: If you plan to send IR messages in the callbacks of the AsyncWebserver
 //       library, you need to set ALLOW_DELAY_CALLS to false.
-//       Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/430
+//       Ref: https://github.com/markszabo/IRremoteESP8266/issues/430
 #define ALLOW_DELAY_CALLS true
 
 /*
@@ -333,9 +333,9 @@ enum decode_type_t {
   GOODWEATHER,
   INAX,
   DAIKIN160,  // 65
-  NEOCLIMA,
+  DAIKIN176,  // 66
   // Add new entries before this one, and update it to point to the last entry.
-  kLastDecodeType = NEOCLIMA,
+  kLastDecodeType = DAIKIN176,
 };
 
 // Message lengths & required repeat values
@@ -362,6 +362,9 @@ const uint16_t kDaikin2DefaultRepeat = kNoRepeat;
 const uint16_t kDaikin160StateLength = 20;
 const uint16_t kDaikin160Bits = kDaikin160StateLength * 8;
 const uint16_t kDaikin160DefaultRepeat = kNoRepeat;
+const uint16_t kDaikin176StateLength = 22;
+const uint16_t kDaikin176Bits = kDaikin176StateLength * 8;
+const uint16_t kDaikin176DefaultRepeat = kNoRepeat;
 const uint16_t kDaikin216StateLength = 27;
 const uint16_t kDaikin216Bits = kDaikin216StateLength * 8;
 const uint16_t kDaikin216DefaultRepeat = kNoRepeat;
@@ -372,7 +375,6 @@ const uint16_t kDishBits = 16;
 const uint16_t kDishMinRepeat = 3;
 const uint16_t kElectraAcStateLength = 13;
 const uint16_t kElectraAcBits = kElectraAcStateLength * 8;
-const uint16_t kElectraAcMinRepeat = kNoRepeat;
 const uint16_t kFujitsuAcMinRepeat = kNoRepeat;
 const uint16_t kFujitsuAcStateLength = 16;
 const uint16_t kFujitsuAcStateLengthShort = 7;
@@ -429,9 +431,6 @@ const uint16_t kMitsubishiHeavy152Bits = kMitsubishiHeavy152StateLength * 8;
 const uint16_t kMitsubishiHeavy152MinRepeat = kNoRepeat;
 const uint16_t kNikaiBits = 24;
 const uint16_t kNECBits = 32;
-const uint16_t kNeoclimaStateLength = 12;
-const uint16_t kNeoclimaBits = kNeoclimaStateLength * 8;
-const uint16_t kNeoclimaMinRepeat = kNoRepeat;
 const uint16_t kPanasonicBits = 48;
 const uint32_t kPanasonicManufacturer = 0x4004;
 const uint16_t kPanasonicAcStateLength = 27;
@@ -566,7 +565,7 @@ const uint8_t  kVestelAcBits = 56;
 // Create a no-op F() macro so the code base still compiles outside of the
 // Arduino framework. Thus we can safely use the Arduino 'F()' macro through-out
 // the code base. That macro stores constants in Flash (PROGMEM) memory.
-// See: https://github.com/crankyoldgit/IRremoteESP8266/issues/667
+// See: https://github.com/markszabo/IRremoteESP8266/issues/667
 #define F(x) x
 #endif  // F
 typedef std::string String;
